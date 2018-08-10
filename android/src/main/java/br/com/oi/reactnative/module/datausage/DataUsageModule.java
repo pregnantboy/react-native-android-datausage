@@ -36,6 +36,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import br.com.oi.reactnative.module.datausage.helper.NetworkStatsHelper;
 
@@ -65,15 +66,20 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 JSONArray apps = new JSONArray();
                 try {
                     ReadableArray packageNames = map.hasKey("packages") ? map.getArray("packages") : null;
-                    Date startDate = map.hasKey("startDate") ? new Date(Double.valueOf(map.getDouble("startDate")).longValue()) : null;
-                    Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue()) : null;
+                    Date startDate = map.hasKey("startDate")
+                            ? new Date(Double.valueOf(map.getDouble("startDate")).longValue())
+                            : null;
+                    Date endDate = map.hasKey("endDate")
+                            ? new Date(Double.valueOf(map.getDouble("endDate")).longValue())
+                            : null;
 
                     if (packageNames != null && packageNames.size() > 0) {
                         for (int i = 0; i < packageNames.size(); i++) {
                             String packageName = packageNames.getString(i);
 
                             try {
-                                final PackageInfo packageInfo = packageManager.getPackageInfo(packageName, GET_META_DATA);
+                                final PackageInfo packageInfo = packageManager.getPackageInfo(packageName,
+                                        GET_META_DATA);
                                 int uid = packageInfo.applicationInfo.uid;
 
                                 ApplicationInfo appInfo = null;
@@ -93,12 +99,15 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                                     // < Android 6.0
                                     Log.i(TAG, "##### Android 5- App: " + name + "     packageName: " + packageName);
                                     JSONObject appStats = getTrafficStats(uid, name, packageName, encodedImage);
-                                    if (appStats != null) apps.put(appStats);
+                                    if (appStats != null)
+                                        apps.put(appStats);
                                 } else {
                                     // Android 6+
                                     Log.i(TAG, "##### Android 6+ App: " + name + "     packageName: " + packageName);
-                                    JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage, startDate, endDate);
-                                    if (appStats != null) apps.put(appStats);
+                                    JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage,
+                                            startDate, endDate);
+                                    if (appStats != null)
+                                        apps.put(appStats);
                                 }
                             } catch (PackageManager.NameNotFoundException e) {
                                 Log.e(TAG, "Error getting app info: " + e.getMessage(), e);
@@ -110,7 +119,7 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 }
 
                 long seconds = new Date().getTime() - startExecDate.getTime();
-                Log.i(TAG, "##### Time elapsed - getDataUsageByApp: " + (seconds/1000L) + " seconds");
+                Log.i(TAG, "##### Time elapsed - getDataUsageByApp: " + (seconds / 1000L) + " seconds");
 
                 callback.invoke(null, apps.toString());
             }
@@ -127,15 +136,20 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 JSONArray apps = new JSONArray();
                 try {
                     ReadableArray packageNames = map.hasKey("packages") ? map.getArray("packages") : null;
-                    Date startDate = map.hasKey("startDate") ? new Date(Double.valueOf(map.getDouble("startDate")).longValue()) : null;
-                    Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue()) : null;
+                    Date startDate = map.hasKey("startDate")
+                            ? new Date(Double.valueOf(map.getDouble("startDate")).longValue())
+                            : null;
+                    Date endDate = map.hasKey("endDate")
+                            ? new Date(Double.valueOf(map.getDouble("endDate")).longValue())
+                            : null;
 
                     if (packageNames != null && packageNames.size() > 0) {
                         for (int i = 0; i < packageNames.size(); i++) {
                             String packageName = packageNames.getString(i);
 
                             try {
-                                final PackageInfo packageInfo = packageManager.getPackageInfo(packageName, GET_META_DATA);
+                                final PackageInfo packageInfo = packageManager.getPackageInfo(packageName,
+                                        GET_META_DATA);
                                 int uid = packageInfo.applicationInfo.uid;
 
                                 ApplicationInfo appInfo = null;
@@ -152,12 +166,15 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                                     // < Android 6.0
                                     Log.i(TAG, "##### Android 5- App: " + name + "     packageName: " + packageName);
                                     JSONObject appStats = getTrafficStats(uid, name, packageName, encodedImage);
-                                    if (appStats != null) apps.put(appStats);
+                                    if (appStats != null)
+                                        apps.put(appStats);
                                 } else {
                                     // Android 6+
                                     Log.i(TAG, "##### Android 6+ App: " + name + "     packageName: " + packageName);
-                                    JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage, startDate, endDate);
-                                    if (appStats != null) apps.put(appStats);
+                                    JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage,
+                                            startDate, endDate);
+                                    if (appStats != null)
+                                        apps.put(appStats);
                                 }
                             } catch (PackageManager.NameNotFoundException e) {
                                 Log.e(TAG, "Error getting app info: " + e.getMessage(), e);
@@ -169,78 +186,39 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 }
 
                 long seconds = new Date().getTime() - startExecDate.getTime();
-                Log.i(TAG, "##### Time elapsed - getDataUsageByApp: " + (seconds/1000L) + " seconds");
+                Log.i(TAG, "##### Time elapsed - getDataUsageByApp: " + (seconds / 1000L) + " seconds");
 
                 callback.invoke(null, apps.toString());
             }
         });
     }
 
+    // Accepts startDate and endDate
     @ReactMethod
-    public void getDataUsageByAppWithTotal(final ReadableMap map, final Callback callback) {
+    public void getTotalMobileUsage(final ReadableMap map, final Callback callback) {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                final PackageManager packageManager = getReactApplicationContext().getPackageManager();
                 JSONObject result = new JSONObject();
-                JSONArray apps = new JSONArray();
-                Double totalGeral = 0D;
                 try {
-                    ReadableArray packageNames = map.hasKey("packages") ? map.getArray("packages") : null;
-                    Date startDate = map.hasKey("startDate") ? new Date(Double.valueOf(map.getDouble("startDate")).longValue()) : null;
-                    Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue()) : null;
+                    Date startDate = map.hasKey("startDate")
+                            ? new Date(Double.valueOf(map.getDouble("startDate")).longValue())
+                            : null;
+                    Date endDate = map.hasKey("endDate")
+                            ? new Date(Double.valueOf(map.getDouble("endDate")).longValue())
+                            : null;
 
-                    if (packageNames != null && packageNames.size() > 0) {
-                        Log.i(TAG, "##### Qtd. de aplicativos a analisar: " + packageNames.size());
+                    Context context = getReactApplicationContext();
 
-                        for (int i = 0; i < packageNames.size(); i++) {
-                            String packageName = packageNames.getString(i);
-                            final PackageInfo packageInfo = packageManager.getPackageInfo(packageName, GET_META_DATA);
-                            int uid = packageInfo.applicationInfo.uid;
+                    NetworkStatsManager networkStatsManager = (NetworkStatsManager) context
+                            .getSystemService(Context.NETWORK_STATS_SERVICE);
+                    NetworkStatsHelper networkStatsHelper = new NetworkStatsHelper(networkStatsManager);
 
-                            ApplicationInfo appInfo = null;
-                            try {
-                                appInfo = packageManager.getApplicationInfo(packageName, 0);
-                            } catch (PackageManager.NameNotFoundException e) {
-                                Log.e(TAG, "Error getting application info: " + e.getMessage(), e);
-                            }
+                    Map<String, Long> resultMap = networkStatsHelper.getMobileSummaryForDevice(context, startDate,
+                            endDate);
 
-                            String name = (String) packageManager.getApplicationLabel(appInfo);
-                            Drawable icon = packageManager.getApplicationIcon(appInfo);
-
-                            Bitmap bitmap = drawableToBitmap(icon);
-                            String encodedImage = encodeBitmapToBase64(bitmap);
-
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                                // < Android 6.0
-                                Log.i(TAG, "##### Android 5- App: " + name + "     packageName: " + packageName);
-                                JSONObject appStats = getTrafficStats(uid, name, packageName, encodedImage);
-                                if (appStats != null) {
-                                    totalGeral += appStats.getDouble("total");
-                                    apps.put(appStats);
-                                }
-                            } else {
-                                // Android 6+
-                                Log.i(TAG, "##### Android 6+ App: " + name + "     packageName: " + packageName);
-                                JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage, startDate, endDate);
-                                if (appStats != null) {
-                                    totalGeral += appStats.getDouble("total");
-                                    apps.put(appStats);
-                                }
-                            }
-                        }
-                    }
-                } catch (PackageManager.NameNotFoundException e) {
-                    Log.e(TAG, "Error getting app info: " + e.getMessage(), e);
-                } catch (JSONException e) {
-                    Log.e(TAG, "Error parsing JSON: " + e.getMessage(), e);
-                }
-
-                try {
-                    result.put("totalGeral", totalGeral)
-                          .put("totalGeralMb", String.format("%.2f MB", ((totalGeral / 1024D) / 1024D)))
-                          .put("apps", apps);
-                } catch (JSONException e) {
+                    result = new JSONObject(resultMap);
+                } catch (Error e) {
                     Log.e(TAG, "Error parsing JSON: " + e.getMessage(), e);
                 }
 
@@ -258,12 +236,16 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 Context context = getReactApplicationContext();
 
                 final PackageManager packageManager = getReactApplicationContext().getPackageManager();
-                //List<ApplicationInfo> packages = packageManager.getInstalledApplications(0);
+                // List<ApplicationInfo> packages = packageManager.getInstalledApplications(0);
                 JSONArray apps = new JSONArray();
-                Date startDate = map.hasKey("startDate") ? new Date(Double.valueOf(map.getDouble("startDate")).longValue()) : null;
-                Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue()) : null;
+                Date startDate = map.hasKey("startDate")
+                        ? new Date(Double.valueOf(map.getDouble("startDate")).longValue())
+                        : null;
+                Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue())
+                        : null;
 
-                final List<PackageInfo> packageInfoList = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+                final List<PackageInfo> packageInfoList = packageManager
+                        .getInstalledPackages(PackageManager.GET_PERMISSIONS);
                 for (PackageInfo packageInfo : packageInfoList) {
                     if (packageInfo.requestedPermissions == null || isSystemPackage(packageInfo))
                         continue;
@@ -287,12 +269,15 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                                 // < Android 6.0
                                 Log.i(TAG, "##### Android 5- App: " + name + "     packageName: " + packageName);
                                 JSONObject appStats = getTrafficStats(uid, name, packageName, encodedImage);
-                                if (appStats != null) apps.put(appStats);
+                                if (appStats != null)
+                                    apps.put(appStats);
                             } else {
                                 // Android 6+
                                 Log.i(TAG, "##### Android 6+ App: " + name + "     packageName: " + packageName);
-                                JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage, startDate, endDate);
-                                if (appStats != null) apps.put(appStats);
+                                JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage,
+                                        startDate, endDate);
+                                if (appStats != null)
+                                    apps.put(appStats);
                             }
                         } catch (PackageManager.NameNotFoundException e) {
                             Log.e(TAG, "Error getting application info: " + e.getMessage(), e);
@@ -302,7 +287,7 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 }
 
                 long seconds = new Date().getTime() - startExecDate.getTime();
-                Log.i(TAG, "##### Time elapsed: " + (seconds/1000L) + " seconds");
+                Log.i(TAG, "##### Time elapsed: " + (seconds / 1000L) + " seconds");
 
                 callback.invoke(null, apps.toString());
             }
@@ -319,7 +304,8 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 final PackageManager packageManager = getReactApplicationContext().getPackageManager();
                 JSONArray apps = new JSONArray();
 
-                final List<PackageInfo> packageInfoList = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+                final List<PackageInfo> packageInfoList = packageManager
+                        .getInstalledPackages(PackageManager.GET_PERMISSIONS);
                 for (PackageInfo packageInfo : packageInfoList) {
                     if (packageInfo.requestedPermissions == null || isSystemPackage(packageInfo))
                         continue;
@@ -334,15 +320,13 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                             appInfo = packageManager.getApplicationInfo(packageName, 0);
 
                             String name = (String) packageManager.getApplicationLabel(appInfo);
-                            apps.put(new JSONObject().put("name", name)
-                                                     .put("packageName", packageName)
-                                                     .put("uid", uid));
+                            apps.put(
+                                    new JSONObject().put("name", name).put("packageName", packageName).put("uid", uid));
 
                             /*
-                            Drawable icon = packageManager.getApplicationIcon(appInfo);
-                            Bitmap bitmap = drawableToBitmap(icon);
-                            String encodedImage = encodeBitmapToBase64(bitmap);
-                            */
+                             * Drawable icon = packageManager.getApplicationIcon(appInfo); Bitmap bitmap =
+                             * drawableToBitmap(icon); String encodedImage = encodeBitmapToBase64(bitmap);
+                             */
 
                         } catch (PackageManager.NameNotFoundException e) {
                             Log.e(TAG, "Error getting application info: " + e.getMessage(), e);
@@ -353,7 +337,7 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 }
 
                 long seconds = new Date().getTime() - startExecDate.getTime();
-                Log.i(TAG, "##### Time elapsed: " + (seconds/1000L) + " seconds");
+                Log.i(TAG, "##### Time elapsed: " + (seconds / 1000L) + " seconds");
 
                 callback.invoke(null, apps.toString());
             }
@@ -370,8 +354,11 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
 
                 final PackageManager packageManager = getReactApplicationContext().getPackageManager();
                 JSONArray apps = new JSONArray();
-                Date startDate = map.hasKey("startDate") ? new Date(Double.valueOf(map.getDouble("startDate")).longValue()) : null;
-                Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue()) : null;
+                Date startDate = map.hasKey("startDate")
+                        ? new Date(Double.valueOf(map.getDouble("startDate")).longValue())
+                        : null;
+                Date endDate = map.hasKey("endDate") ? new Date(Double.valueOf(map.getDouble("endDate")).longValue())
+                        : null;
 
                 Intent mainIntent = new Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER);
                 List<ResolveInfo> packages = packageManager.queryIntentActivities(mainIntent, 0);
@@ -396,12 +383,15 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                             // < Android 6.0
                             Log.i(TAG, "##### Android 5- App: " + name + "     packageName: " + packageName);
                             JSONObject appStats = getTrafficStats(uid, name, packageName, encodedImage);
-                            if (appStats != null) apps.put(appStats);
+                            if (appStats != null)
+                                apps.put(appStats);
                         } else {
                             // Android 6+
                             Log.i(TAG, "##### Android 6+ App: " + name + "     packageName: " + packageName);
-                            JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage, startDate, endDate);
-                            if (appStats != null) apps.put(appStats);
+                            JSONObject appStats = getNetworkManagerStats(uid, name, packageName, encodedImage,
+                                    startDate, endDate);
+                            if (appStats != null)
+                                apps.put(appStats);
                         }
 
                     } catch (Exception e) {
@@ -410,37 +400,42 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                 }
 
                 long seconds = new Date().getTime() - startExecDate.getTime();
-                Log.i(TAG, "##### Time elapsed: " + (seconds/1000L) + " seconds");
+                Log.i(TAG, "##### Time elapsed: " + (seconds / 1000L) + " seconds");
 
                 callback.invoke(null, apps.toString());
             }
         });
     }
 
-    private JSONObject getNetworkManagerStats(int uid, String name, String packageName, String encodedImage, Date startDate, Date endDate) {
-        //Log.i(TAG, "##### Step getNetworkManagerStats(" + uid + ", " + name + ", ...)");
-        NetworkStatsManager networkStatsManager = (NetworkStatsManager) getReactApplicationContext().getSystemService(Context.NETWORK_STATS_SERVICE);
+    private JSONObject getNetworkManagerStats(int uid, String name, String packageName, String encodedImage,
+            Date startDate, Date endDate) {
+        // Log.i(TAG, "##### Step getNetworkManagerStats(" + uid + ", " + name + ",
+        // ...)");
+        NetworkStatsManager networkStatsManager = (NetworkStatsManager) getReactApplicationContext()
+                .getSystemService(Context.NETWORK_STATS_SERVICE);
         NetworkStatsHelper networkStatsHelper = new NetworkStatsHelper(networkStatsManager, uid);
 
-        //long wifiBytesRx = networkStatsHelper.getAllRxBytesMobile(getReactApplicationContext()) + networkStatsHelper.getAllRxBytesWifi();
-        //long wifiBytesTx = networkStatsHelper.getAllRxBytesMobile(getReactApplicationContext()) + networkStatsHelper.getAllRxBytesWifi();
+        // long wifiBytesRx =
+        // networkStatsHelper.getAllRxBytesMobile(getReactApplicationContext()) +
+        // networkStatsHelper.getAllRxBytesWifi();
+        // long wifiBytesTx =
+        // networkStatsHelper.getAllRxBytesMobile(getReactApplicationContext()) +
+        // networkStatsHelper.getAllRxBytesWifi();
 
-        double gsmBytesRx = (double) networkStatsHelper.getPackageRxBytesMobile(getReactApplicationContext()) + networkStatsHelper.getPackageRxBytesMobile(getReactApplicationContext(), startDate, endDate);
-        double gsmBytesTx = (double) networkStatsHelper.getPackageTxBytesMobile(getReactApplicationContext()) + networkStatsHelper.getPackageRxBytesMobile(getReactApplicationContext(), startDate, endDate);
+        double gsmBytesRx = (double) networkStatsHelper.getPackageRxBytesMobile(getReactApplicationContext())
+                + networkStatsHelper.getPackageRxBytesMobile(getReactApplicationContext(), startDate, endDate);
+        double gsmBytesTx = (double) networkStatsHelper.getPackageTxBytesMobile(getReactApplicationContext())
+                + networkStatsHelper.getPackageRxBytesMobile(getReactApplicationContext(), startDate, endDate);
         double total = gsmBytesRx + gsmBytesTx;
-        Log.i(TAG, "##### getNetworkManagerStats - " + packageName + " - tx: " + gsmBytesTx + " | rx: " + gsmBytesRx + " | total: " + total);
+        Log.i(TAG, "##### getNetworkManagerStats - " + packageName + " - tx: " + gsmBytesTx + " | rx: " + gsmBytesRx
+                + " | total: " + total);
 
         try {
             if (total > 0D) {
-                return new JSONObject().put("name", name)
-                                        .put("packageName", packageName)
-                                        .put("rx", gsmBytesRx)
-                                        .put("rxMb", String.format("%.2f MB", ((gsmBytesRx / 1024D) / 1024D)))
-                                        .put("tx", gsmBytesTx)
-                                        .put("txMb", String.format("%.2f MB", ((gsmBytesTx / 1024D) / 1024D)))
-                                        .put("total", total)
-                                        .put("totalMb", String.format("%.2f MB", (total / 1024D) / 1024D))
-                                        .put("icon", encodedImage);
+                return new JSONObject().put("name", name).put("packageName", packageName).put("rx", gsmBytesRx)
+                        .put("rxMb", String.format("%.2f MB", ((gsmBytesRx / 1024D) / 1024D))).put("tx", gsmBytesTx)
+                        .put("txMb", String.format("%.2f MB", ((gsmBytesTx / 1024D) / 1024D))).put("total", total)
+                        .put("totalMb", String.format("%.2f MB", (total / 1024D) / 1024D)).put("icon", encodedImage);
             }
         } catch (JSONException e) {
             Log.e(TAG, "Error putting app info: " + e.getMessage(), e);
@@ -456,16 +451,12 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
 
         try {
             if (total > 0) {
-                Log.i(TAG, "##### getTrafficStats - " + packageName + " - tx: " + tx + " | rx: " + rx + " | total: " + total);
-                return new JSONObject().put("name", name)
-                                        .put("packageName", packageName)
-                                        .put("rx", rx)
-                                        .put("received", String.format("%.2f MB", ((rx / 1024D) / 1024D) ))
-                                        .put("tx", tx)
-                                        .put("sent", String.format("%.2f MB", ((tx / 1024D) / 1024D) ))
-                                        .put("total", total)
-                                        .put("totalMb", String.format("%.2f MB", (total / 1024D) / 1024D ))
-                                        .put("icon", encodedImage);
+                Log.i(TAG, "##### getTrafficStats - " + packageName + " - tx: " + tx + " | rx: " + rx + " | total: "
+                        + total);
+                return new JSONObject().put("name", name).put("packageName", packageName).put("rx", rx)
+                        .put("received", String.format("%.2f MB", ((rx / 1024D) / 1024D))).put("tx", tx)
+                        .put("sent", String.format("%.2f MB", ((tx / 1024D) / 1024D))).put("total", total)
+                        .put("totalMb", String.format("%.2f MB", (total / 1024D) / 1024D)).put("icon", encodedImage);
             }
         } catch (JSONException e) {
             Log.e(TAG, "Error putting app info: " + e.getMessage(), e);
@@ -486,7 +477,7 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
 
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-            if(bitmapDrawable.getBitmap() != null) {
+            if (bitmapDrawable.getBitmap() != null) {
                 return bitmapDrawable.getBitmap();
             }
         }
@@ -494,7 +485,8 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
         if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
             bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
         } else {
-            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(),
+                    Bitmap.Config.ARGB_8888);
         }
 
         Canvas canvas = new Canvas(bitmap);
@@ -506,19 +498,24 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void requestPermissions(final ReadableMap map, final Callback callback) {
-        Log.i(TAG, "##### Executando requestPermissions(" + (map != null && map.hasKey("requestPermission") ? map.getString("requestPermission") : "null") + ")");
+        Log.i(TAG, "##### Executando requestPermissions("
+                + (map != null && map.hasKey("requestPermission") ? map.getString("requestPermission") : "null") + ")");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-            boolean requestPermission = map.hasKey("requestPermission") ? Boolean.parseBoolean(map.getString("requestPermission")) : true;
+            boolean requestPermission = map.hasKey("requestPermission")
+                    ? Boolean.parseBoolean(map.getString("requestPermission"))
+                    : true;
             try {
                 if (!hasPermissionToReadNetworkHistory(requestPermission)) {
-                    callback.invoke(null, new JSONObject().put("permissions", hasPermissionToReadNetworkHistory(false)).toString());
+                    callback.invoke(null,
+                            new JSONObject().put("permissions", hasPermissionToReadNetworkHistory(false)).toString());
                     return;
                 }
 
                 if (requestPermission && !hasPermissionToReadPhoneStats()) {
                     requestPhoneStateStats();
-                    callback.invoke(null, new JSONObject().put("permissions", hasPermissionToReadPhoneStats()).toString());
+                    callback.invoke(null,
+                            new JSONObject().put("permissions", hasPermissionToReadPhoneStats()).toString());
                     return;
                 }
 
@@ -540,22 +537,21 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
             return true;
         }
         final AppOpsManager appOps = (AppOpsManager) getCurrentActivity().getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getCurrentActivity().getPackageName());
+        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(),
+                getCurrentActivity().getPackageName());
         if (mode == AppOpsManager.MODE_ALLOWED) {
             return true;
         }
         appOps.startWatchingMode(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                getCurrentActivity().getApplicationContext().getPackageName(),
-                new AppOpsManager.OnOpChangedListener() {
+                getCurrentActivity().getApplicationContext().getPackageName(), new AppOpsManager.OnOpChangedListener() {
                     @Override
                     @TargetApi(Build.VERSION_CODES.M)
                     public void onOpChanged(String op, String packageName) {
                         try {
-                            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getCurrentActivity().getPackageName());
+                            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                                    android.os.Process.myUid(), getCurrentActivity().getPackageName());
                             if (mode != AppOpsManager.MODE_ALLOWED) {
                                 return;
-
-
 
                             }
                             appOps.stopWatchingMode(this);
@@ -570,12 +566,14 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
                         }
                     }
                 });
-        if (requestPermission) requestReadNetworkHistoryAccess();
+        if (requestPermission)
+            requestReadNetworkHistoryAccess();
         return false;
     }
 
     private boolean hasPermissionToReadPhoneStats() {
-        if (ActivityCompat.checkSelfPermission(getCurrentActivity(), android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED) {
+        if (ActivityCompat.checkSelfPermission(getCurrentActivity(),
+                android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED) {
             return false;
         } else {
             return true;
@@ -588,13 +586,14 @@ public class DataUsageModule extends ReactContextBaseJavaModule {
     }
 
     private void requestPhoneStateStats() {
-        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{ android.Manifest.permission.READ_PHONE_STATE }, READ_PHONE_STATE_REQUEST);
+        ActivityCompat.requestPermissions(getCurrentActivity(),
+                new String[] { android.Manifest.permission.READ_PHONE_STATE }, READ_PHONE_STATE_REQUEST);
     }
 
     /**
      * Return whether the given PackgeInfo represents a system package or not.
-     * User-installed packages (Market or otherwise) should not be denoted as
-     * system packages.
+     * User-installed packages (Market or otherwise) should not be denoted as system
+     * packages.
      *
      * @param pkgInfo
      * @return
